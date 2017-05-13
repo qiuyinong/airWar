@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>飞机大战-背景（面向对象）</title>
+    <script src="js/jquery-1.11.3.js" type="text/javascript" charset="UTF-8"></script>
+    <script src="js/jquery-ui.js" type="text/javascript" charset="UTF-8"></script>
+    <script src="js/formValidator-4.0.1.js" type="text/javascript" charset="UTF-8"></script>
+    <script src="js/formValidatorRegex.js" type="text/javascript" charset="UTF-8"></script>
+    <script src="js/jquery.form.js" type="text/javascript" charset="UTF-8"></script>
+    <link href="css/jquery-ui.css" rel="stylesheet" type="text/css">
+    <link href="css/jquery-ui.theme.css" rel="stylesheet" type="text/css">
+    <link href="css/validator.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div id="stage" style="margin: 0px auto;width: 480px;height: 650px;background:#232323; ">
+    <canvas id="canvas" width="480px" height="650px">
+        您的浏览器不支持Canvas
+    </canvas>
+</div>
+<div id="userLogin">
+    <form id="loginForm" sction="login.php" method="post">
+        <table>
+            <tr>
+                <td>用户名：</td>
+                <td><input type="text" id="loginName" name="loginName"> </td>
+                <td>
+                    <div id="loginNameTip"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>密码：</td>
+                <td>
+                    <input type="password" id="loginPwd" name="loginPwd">
+                </td>
+                <td>
+                    <div id="loginPwdTip"></div>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><a href="javascript:clickRegist();">注册</a></td>
+                <td></td>
+            </tr>
+        </table>
+    </form>
+</div>
+<div id="registDialog">
+    <div id="nameError"></div>
+    <form id="userRegist" action="regist.php" method="post">
+        <table>
+            <tr>
+                <td>
+                    用户名：
+                </td>
+                <td>
+                    <input type="text" id="username" name="username">
+                </td>
+                <td>
+                    <div id="usernameTip">
+
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    密码：
+                </td>
+                <td>
+                    <input type="password" id="pwd" name="password">
+                </td>
+                <td>
+                    <div id="pwdTip">
+
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    确认密码：
+                </td>
+                <td>
+                    <input type="password" id="repwd" name="repassword">
+                </td>
+                <td>
+                    <div id="repwdTip">
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+</body>
+<script>
+    $(function () {
+        $("#registDialog").dialog({
+            autoOpen:false,
+            title:"用户注册",
+            modal:true,
+            width:550,
+            buttons:[
+                {
+                    text:"注册",
+                    click:function () {
+                        $("#userRegist").ajaxSubmit({
+                            url:"regist.php",
+                            type:"POST",
+                            data:$("#userRegist").serialize(),
+                            success:function (responseText,statusText,xhr,$form) {
+                                $("#registDialog").dialog('close');
+                                $("#userLogin").dialog('open');
+                            }
+                        });
+                    }
+                }
+            ]
+        });
+        $("#userLogin").dialog({
+            autoOpen:true,
+            title:"用户登录",
+            modal:true,
+            width:450,
+            buttons:[
+                {
+                    text:"登录",
+                    click:function () {
+                        $("#loginForm").ajaxSubmit({
+                            url:"login.php",
+                            type:"POST",
+                            data:$("#loginForm").serialize(),
+                            success:function (responseText,statusText,xhr,$form) {
+                                if(responseText=="success"){
+                                    $("#userLogin").dialog('close');
+                                }
+                            }
+                        });
+                    }
+                }
+            ]
+        });
+        $.formValidator.initConfig({
+            validatorGroup:"1"
+        });
+        $("#loginName").formValidator({
+            validatorGroup:"1",
+            onShow:"请输入用户名",
+            onFocus:"请输入用户名"
+        }).inputValidator({
+            min:1,
+            onError:"用户名不能为空"
+        });
+        $("#loginPwd").formValidator({
+            validatorGroup:"1",
+            onShow:"请输入密码",
+            onFocus:"请输入密码"
+        }).inputValidator({
+            min:1,
+            onError:"密码不能为空"
+        });
+        $.formValidator.initConfig({
+            validatorGroup:"2"
+        });
+        $("#username").formValidator({
+            validatorGroup:"2",
+            onShow:"请输入用户名",
+            onFocus:"只能英文和数字，并且长度在6-18之间"
+        }).inputValidator({
+            min:6,
+            max:18,
+            onError:"用户名输入错误"
+        }).ajaxValidator({
+            url:"checkUsername.php",
+            tpye:"POST",
+            data:$("#username").val(),
+            success:function (data,textStatus) {
+                if(data=='error'){
+                    return false;
+                }
+                return true;
+            },
+            error:function (XMLHttpRequest,textStatus,errorThrown) {
+            },
+            onError:"当前用户名已存在"
+        });
+        $("#pwd").formValidator({
+            validatorGroup:"2",
+            onShow:"请输入密码",
+            onFocus:"长度在6-12之间"
+        }).inputValidator({
+            min:6,
+            max:12,
+            onError:"密码输入错误"
+        });
+        $("#repwd").formValidator({
+            validatorGroup:"2",
+            onShow:"请输入密码",
+            onFocus:"长度在6-12之间"
+        }).inputValidator({
+            min:6,
+            max:12,
+            onError:"密码输入错误"
+        }).compareValidator({
+            desID:"pwd",
+            operator:"=",
+            onError:"两次密码输入不一致"
+        });
+    });
+    function clickRegist() {
+        $("#userLogin").dialog('close');
+        $("#registDialog").dialog('open');
+    }
+</script>
+<script src="project_1.js" type="text/javascript"></script>
+</html>
